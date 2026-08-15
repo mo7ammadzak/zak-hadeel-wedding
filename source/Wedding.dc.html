@@ -111,7 +111,16 @@
   <p style="margin:0; font-size:14px; color:#444141; line-height:1.7">{{ t.whereNote }}</p>
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px">
     <a href="https://maps.app.goo.gl/xxEdz5Pu6ppTtQAF7" target="_blank" rel="noopener" style="font-size:12px; letter-spacing:0.14em; text-transform:uppercase; text-decoration:none; color:#8a6a0b; border:1px solid #e8c22e; border-radius:4px; padding:9px 16px" style-hover="{{ btnHover }}">{{ t.mapCta }}</a>
-    <a href="{{ icsHref }}" download="mohammad-hadeel-wedding.ics" style="font-size:12px; letter-spacing:0.14em; text-transform:uppercase; text-decoration:none; color:#8a6a0b; border:1px solid #e8c22e; border-radius:4px; padding:9px 16px" style-hover="{{ btnHover }}">{{ t.calCta }}</a>
+    <div style="position:relative">
+      <button type="button" onClick="{{ toggleCal }}" style="font-family:'EB Garamond','Amiri',serif; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:#8a6a0b; background:transparent; border:1px solid #e8c22e; border-radius:4px; padding:9px 16px; cursor:pointer" style-hover="{{ btnHover }}">{{ t.calCta }}</button>
+      <sc-if value="{{ calOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:calc(100% + 6px); inset-inline-start:0; z-index:5; min-width:190px; background:#ffffff; border:1px solid rgba(200,160,20,0.5); border-radius:4px; box-shadow:0 6px 18px rgba(45,43,43,0.12); display:flex; flex-direction:column; padding:4px">
+          <sc-for list="{{ calLinks }}" as="link" hint-placeholder-count="4">
+            <a href="{{ link.href }}" target="_blank" rel="noopener" download="{{ link.download }}" onClick="{{ closeCal }}" style="font-size:14px; text-decoration:none; color:#201f1d; padding:9px 12px; border-radius:3px" style-hover="{{ menuHover }}">{{ link.label }}</a>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
   </div>
 </div>
 <div style="background:#ffffff; padding:30px 28px; display:flex; flex-direction:column; gap:10px">
@@ -284,7 +293,20 @@ showFaq: lang === 'en',
 hasKicker: !!c.childKicker,
 hasFavourKicker: !!c.favourKicker,
 hasLine: !!(lang === 'en' ? (this.props.emotionalLine ?? c.line) : c.line),
-icsHref: 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics),
+calOpen: !!this.state.calOpen,
+toggleCal: () => this.setState(s => ({ calOpen: !s.calOpen })),
+closeCal: () => this.setState({ calOpen: false }),
+menuHover: { background: '#fff6dc' },
+calLinks: (() => {
+  const title = lang === 'ar' ? 'زفاف محمد وهديل' : 'Mohammad and Hadeel\u2019s Wedding';
+  const loc = lang === 'ar' ? 'مطعم دا عصمت، شارع الرينبو، عمّان' : 'Da Esmat, Rainbow Street, Amman';
+  const det = lang === 'ar' ? 'الاستقبال 6:45 مساءً' : 'Doors at 6:45 PM.';
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mohammad and Hadeel//Wedding//EN','BEGIN:VEVENT','UID:mohammad-hadeel-20260829@wedding','DTSTAMP:20260814T000000Z','DTSTART:20260829T154500Z','DTEND:20260829T190000Z','SUMMARY:' + title,'DESCRIPTION:' + det,'LOCATION:' + loc,'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  return [
+    { label: 'Google Calendar', href: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(title) + '&dates=20260829T154500Z/20260829T190000Z&details=' + encodeURIComponent(det) + '&location=' + encodeURIComponent(loc), download: null },
+    { label: 'Outlook', href: 'https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=' + encodeURIComponent(title) + '&startdt=2026-08-29T18:45:00%2B03:00&enddt=2026-08-29T22:00:00%2B03:00&location=' + encodeURIComponent(loc) + '&body=' + encodeURIComponent(det), download: null },
+  ];
+})(),
 contacts: (c.contacts || []).map(p => ({ name: p[0], phone: p[1], href: 'tel:+962' + p[1].slice(1) })),
 dir: lang === 'ar' ? 'rtl' : 'ltr',
 toggleLang: () => this.setState(s => ({ lang: s.lang === 'en' ? 'ar' : 'en' })),
